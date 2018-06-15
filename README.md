@@ -11,6 +11,36 @@ JSON parsing is done with gason
 https://github.com/vivkin/gason
 
 #lib_geojson 
+
 GeoJSON parsing using lib_geojson
 
 https://github.com/pedro-vicente/lib_geojson
+
+#UNIX build
+
+Dependencies
+------------
+
+[wxWidgets](https://www.wxwidgets.org/)
+wxWidgets is a library for creating graphical user interfaces for cross-platform applications.
+<br /> 
+
+Install dependency packages (Ubuntu):
+<pre>
+sudo apt-get install build-essential
+sudo apt-get install autoconf
+sudo apt-get install libwxgtk3.0-dev
+sudo apt-get install libnetcdf-dev netcdf-bin netcdf-doc
+</pre>
+
+Get source:
+<pre>
+git clone https://github.com/pedro-vicente/render_geojson.git
+</pre>
+
+Build with:
+<pre>
+autoreconf -vfi
+./configure
+make
+</pre>
