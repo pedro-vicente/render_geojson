@@ -326,11 +326,17 @@ void wxChart::OnDraw(wxDC& dc)
         else if (geometry.m_type.compare("Polygon") == 0 ||
           geometry.m_type.compare("MultiPolygon") == 0)
         {
+          std::vector<PointData> points;
+          for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
+          {
+            points.push_back(PointData(lon.at(idx_crd), lat.at(idx_crd)));
+          }
+          m_graf.draw_polygon(dc, points, wxColour(0, 255, 0));
           for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
           {
             double lat_ = lat.at(idx_crd);
             double lon_ = lon.at(idx_crd);
-            m_graf.draw_circle(dc, lon_, lat_, wxColour(0, 255, 0));
+            m_graf.draw_circle(dc, lon_, lat_, wxColour(255, 0, 0));
           }
         }
       }  //idx_pol

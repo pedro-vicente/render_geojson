@@ -1,16 +1,22 @@
 #ifndef WX_GRAFIX_HPP
 #define WX_GRAFIX_HPP 1
 
+#include <vector>
 #include "wx/wxprec.h"
 #include "wx/wx.h"
 #include "wx/filehistory.h"
 #include "wx/config.h"
 #include "wx/graphics.h"
 
-struct PointData
+class PointData
 {
+public:
   double x;
   double y;
+  PointData(double x_, double y_) :
+    x(x_),
+    y(y_)
+  {}
 };
 
 class graf_t
@@ -27,6 +33,7 @@ public:
   void draw_line(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data);
   void draw_rectangle(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data, wxColour color);
   void draw_polygon(wxDC &dc, size_t nbr_points, PointData *points_data, wxColour color, bool border, bool is_bitmap);
+  void draw_polygon(wxDC &dc, std::vector<PointData> &points, wxColour color);
   void draw_spline(wxDC &dc, size_t nbr_points, PointData *points_data, wxColour color);
   void draw_scale(wxDC &dc);
 

@@ -149,6 +149,25 @@ void graf_t::draw_polygon(wxDC &dc, size_t nbr_points, PointData *points_data, w
   delete[] points_screen;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//graf_t::draw_polygon
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void graf_t::draw_polygon(wxDC &dc, std::vector<PointData> &points_data, wxColour color)
+{
+  dc.SetBrush(wxBrush(color));
+  wxPoint *points_screen = new wxPoint[points_data.size()];
+  for (size_t idx = 0; idx < points_data.size(); idx++)
+  {
+    data_to_screen(points_data[idx].x, points_data[idx].y);
+    points_screen[idx].x = P.x;
+    points_screen[idx].y = P.y;
+  }
+  dc.DrawPolygon(points_data.size(), points_screen);
+  delete[] points_screen;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //graf_t::draw_back
 /////////////////////////////////////////////////////////////////////////////////////////////////////
