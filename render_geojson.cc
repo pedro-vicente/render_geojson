@@ -155,6 +155,11 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
 
 int wxFrameMain::read(const std::string &file_name)
 {
+  int is_topo = is_topojson(file_name.c_str());
+  if (is_topo == 1)
+  {
+    return -1;
+  }
   m_win_chart = m_splitter->GetWindow2();
   wxChart *chart = new wxChart(m_splitter);
   if (chart->read_geojson(file_name.c_str()) < 0)
@@ -267,7 +272,7 @@ int wxChart::read_geojson(const char* file_name)
 
   SetScrollbar(wxVERTICAL, 0, 0, 0);
   m_graf.init(x_min, y_min, x_max, y_max,
-    x_low, y_low, 
+    x_low, y_low,
     x_high, y_high);
   return 0;
 }

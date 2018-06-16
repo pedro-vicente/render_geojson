@@ -39,6 +39,7 @@ public:
   int read_geojson(const char* file_name);
   graf_t m_graf;
   geojson_t m_geojson;
+  topojson_t m_topojson;
 
 private:
   wxDECLARE_EVENT_TABLE();

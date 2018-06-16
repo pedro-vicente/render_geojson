@@ -51,7 +51,7 @@ int is_topojson(const char* file_name)
     {
       assert(node->value.getTag() == JSON_STRING);
       std::string str = node->value.toString();
-      if (str.compare("Topology"))
+      if (str.compare("Topology") == 0)
       {
         json_type++;
       }
