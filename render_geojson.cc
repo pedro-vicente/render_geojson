@@ -207,13 +207,68 @@ int wxChart::read_file(const std::string &file_name)
   y_max = 750;
 
   //data
-  x_low = 0;
-  x_high =100;
-  y_low = 0;
-  y_high = 300;
+  x_low = std::numeric_limits<double>::max();
+  y_low = std::numeric_limits<double>::max();
+  x_high = -std::numeric_limits<double>::max();
+  y_high = -std::numeric_limits<double>::max();
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //get maximum and minimum values
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t size_features = m_geojson.m_feature.size();
+  for (size_t idx_fet = 0; idx_fet < size_features; idx_fet++)
+  {
+    feature_t feature = m_geojson.m_feature.at(idx_fet);
+    size_t size_geometry = feature.m_geometry.size();
+    for (size_t idx_geo = 0; idx_geo < size_geometry; idx_geo++)
+    {
+      geometry_t geometry = feature.m_geometry.at(idx_geo);
+      size_t size_pol = geometry.m_polygons.size();
+      for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
+      {
+        polygon_t polygon = geometry.m_polygons[idx_pol];
+        size_t size_crd = polygon.m_coord.size();
+        if (size_crd == 0)
+        {
+          continue;
+        }
+        std::vector<double> lat;
+        std::vector<double> lon;
+        for (size_t idx = 0; idx < size_crd; idx++)
+        {
+          lat.push_back(polygon.m_coord[idx].m_lat);
+          lon.push_back(polygon.m_coord[idx].m_lon);
+        }
+        for (size_t idx = 0; idx < size_crd; idx++)
+        {
+          double lat_ = lat.at(idx);
+          double lon_ = lon.at(idx);
+          if (lat_ > y_high)
+          {
+            y_high = lat.at(idx);
+          }
+          if (lon_ > x_high)
+          {
+            x_high = lon.at(idx);
+          }
+          if (lat_ < y_low)
+          {
+            y_low = lat.at(idx);
+          }
+          if (lon_ < x_low)
+          {
+            x_low = lon.at(idx);
+          }
+        }
+      }  //idx_pol
+    } //idx_geo
+  } //idx_fet
 
   SetScrollbar(wxVERTICAL, 0, 0, 0);
-  m_graf.init(x_min, y_min, x_max, y_max, x_low, y_low, x_high, y_high);
+  m_graf.init(x_min, y_min, x_max, y_max,
+    x_low, y_low, 
+    x_high, y_high);
   return 0;
 }
 
@@ -271,9 +326,13 @@ void wxChart::OnDraw(wxDC& dc)
         else if (geometry.m_type.compare("Polygon") == 0 ||
           geometry.m_type.compare("MultiPolygon") == 0)
         {
-
+          for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
+          {
+            double lat_ = lat.at(idx_crd);
+            double lon_ = lon.at(idx_crd);
+            m_graf.draw_circle(dc, lon_, lat_, wxColour(0, 255, 0));
+          }
         }
-
       }  //idx_pol
     } //idx_geo
   } //idx_fet
