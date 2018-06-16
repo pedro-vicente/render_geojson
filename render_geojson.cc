@@ -194,6 +194,26 @@ int wxChart::read_file(const std::string &file_name)
   {
     return -1;
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //initialize_chart
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  double x_low, y_low, x_high, y_high; //data
+  int x_min, x_max, y_min, y_max; //screen
+  x_min = 80;
+  y_min = 30;
+  x_max = 1300;
+  y_max = 750;
+
+  //data
+  x_low = 0;
+  x_high =100;
+  y_low = 0;
+  y_high = 300;
+
+  SetScrollbar(wxVERTICAL, 0, 0, 0);
+  m_graf.init(x_min, y_min, x_max, y_max, x_low, y_low, x_high, y_high);
   return 0;
 }
 
@@ -203,6 +223,8 @@ int wxChart::read_file(const std::string &file_name)
 
 void wxChart::OnDraw(wxDC& dc)
 {
+  m_graf.draw_back(dc);
+  m_graf.draw_scale(dc);
 
   ///////////////////////////////////////////////////////////////////////////////////////
   //render m_geojson
