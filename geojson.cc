@@ -33,7 +33,8 @@ int geojson_t::convert(const char* file_name)
   buf = (char*)malloc(length);
   if (buf)
   {
-    fread(buf, 1, length, f);
+    size_t nbr = fread(buf, 1, length, f);
+    std::cout << "read " << nbr << std::endl;
   }
   fclose(f);
 
