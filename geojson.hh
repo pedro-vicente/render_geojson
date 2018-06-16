@@ -83,6 +83,7 @@ public:
 private:
   int parse_root(JsonValue value);
   int parse_features(JsonValue value);
+  int parse_feature(JsonValue value);
   int parse_geometry(JsonValue value, feature_t &feature);
   int parse_coordinates(JsonValue value,
     const std::string &type,
