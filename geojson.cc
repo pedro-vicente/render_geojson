@@ -71,6 +71,11 @@ int geojson_t::parse_root(JsonValue value)
     if (std::string(node->key).compare("type") == 0)
     {
       assert(node->value.getTag() == JSON_STRING);
+      std::string str = node->value.toString();
+      if (str.compare("Feature") == 0)
+      {
+
+      }
     }
     if (std::string(node->key).compare("features") == 0)
     {
@@ -189,7 +194,7 @@ int geojson_t::parse_geometry(JsonValue value, feature_t &feature)
         coord.m_lat = arr_coord.toNode()->next->value.toNumber();
         polygon.m_coord.push_back(coord);
         geometry.m_polygons.push_back(polygon);
-       
+
         feature.m_geometry.push_back(geometry);
       }
 

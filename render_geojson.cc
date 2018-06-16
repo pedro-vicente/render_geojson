@@ -132,7 +132,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
     wxEmptyString,
     wxString::Format
     (
-      wxT("m_geojson (*.m_geojson)|*.m_geojson|All files (%s)|%s"),
+      wxT("m_geojson (*.geojson)|*.geojson|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
     ),
@@ -203,7 +203,6 @@ int wxChart::read_file(const std::string &file_name)
 
 void wxChart::OnDraw(wxDC& dc)
 {
-  dc.DrawRectangle(0, 0, 200, 200);
 
   ///////////////////////////////////////////////////////////////////////////////////////
   //render m_geojson
