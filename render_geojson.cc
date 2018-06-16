@@ -336,7 +336,7 @@ void wxChart::OnDraw(wxDC& dc)
           {
             double lat_ = lat.at(idx_crd);
             double lon_ = lon.at(idx_crd);
-            m_graf.draw_circle(dc, lon_, lat_, wxColour(255, 0, 0));
+            m_graf.draw_circle(dc, lon_, lat_, wxColour(255, 0, 0), 2);
           }
         }
       }  //idx_pol
