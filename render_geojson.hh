@@ -22,6 +22,7 @@
 #include "wx/collpane.h"
 #include "sample.xpm"
 #include "grafix.hh"
+#include "geojson.hh"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //wxChart
@@ -36,6 +37,7 @@ public:
   void OnMouseMove(wxMouseEvent &event);
   int read_file(const std::string &file_name);
   graf_t m_graf;
+  geojson_t m_geojson;
 
 private:
   wxDECLARE_EVENT_TABLE();
