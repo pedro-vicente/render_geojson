@@ -157,7 +157,7 @@ int wxFrameMain::read(const std::string &file_name)
 {
   m_win_chart = m_splitter->GetWindow2();
   wxChart *chart = new wxChart(m_splitter);
-  if (chart->read_file(file_name) < 0)
+  if (chart->read_geojson(file_name.c_str()) < 0)
   {
     chart->Destroy();
     return -1;
@@ -185,12 +185,12 @@ wxChart::wxChart(wxWindow *parent) :
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-//wxChart::read_file
+//wxChart::read_geojson
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int wxChart::read_file(const std::string &file_name)
+int wxChart::read_geojson(const char* file_name)
 {
-  if (m_geojson.convert(file_name.c_str()) < 0)
+  if (m_geojson.convert(file_name) < 0)
   {
     return -1;
   }

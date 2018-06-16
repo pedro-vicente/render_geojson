@@ -35,7 +35,7 @@ public:
   virtual void OnDraw(wxDC& dc);
   void OnMouseDown(wxMouseEvent &event);
   void OnMouseMove(wxMouseEvent &event);
-  int read_file(const std::string &file_name);
+  int read_geojson(const char* file_name);
   graf_t m_graf;
   geojson_t m_geojson;
 

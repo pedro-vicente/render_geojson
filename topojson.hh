@@ -13,7 +13,7 @@
 #include <vector>
 #include "gason.h"
 
-
+int is_topojson(const char* file_name);
 
 //A topology must have an “arcs” member whose value is an array of arrays of positions. 
 //Each arc must be an array of two or more positions.
