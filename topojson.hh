@@ -41,10 +41,10 @@ public:
 };
 
 //For type “Polygon”, the “arcs” member must be an array of LinearRing arc indexes. 
-class WT_API Polygon
+class WT_API Polygon_topojson_t
 {
 public:
-  Polygon() {}
+  Polygon_topojson_t() {}
   std::vector<int> arcs; //indices into arc_t array
 };
 
@@ -55,7 +55,7 @@ public:
   //A TopoJSON object must have a member with the name “type”. 
   //This member’s value is a string that determines the type of the TopoJSON object.
   std::string type;
-  std::vector<Polygon> m_polygon;
+  std::vector<Polygon_topojson_t> m_polygon;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
