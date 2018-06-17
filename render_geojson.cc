@@ -1,4 +1,5 @@
 #include "render_geojson.hh"
+#include "pal_rgb.h"
 
 const int panel_size = 510;
 
@@ -202,6 +203,13 @@ wxChart::wxChart(wxWindow *parent) :
   y_low = std::numeric_limits<double>::max();
   x_high = -std::numeric_limits<double>::max();
   y_high = -std::numeric_limits<double>::max();
+  for (size_t idx = 0; idx < 3 * 256; idx += 3)
+  {
+    unsigned char r = pal_rgb[idx];
+    unsigned char g = pal_rgb[idx + 1];
+    unsigned char b = pal_rgb[idx + 2];
+    rgb_256.push_back(rgb_t(r, g, b));
+  }
   SetScrollbar(wxVERTICAL, 0, 0, 0);
 }
 
@@ -376,9 +384,7 @@ int wxChart::read_topojson(const char* file_name)
       }//"Polygon"
     }//size_geom
   }
-
   m_graf.init(x_min, y_min, x_max, y_max, x_low, y_low, x_high, y_high);
-
   return 0;
 }
 
@@ -395,9 +401,11 @@ void wxChart::OnDraw(wxDC& dc)
   //render topojson
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  if (m_is_topo)
+  if (m_is_topo == 1)
   {
     size_t size_geom = m_topojson.m_geom.size();
+    size_t range = rgb_256.size() / size_geom;
+    size_t idx_pal = 0;
     for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
     {
       Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
@@ -449,10 +457,8 @@ void wxChart::OnDraw(wxDC& dc)
               pos_quant[0] = x[idx];
               pos_quant[1] = y[idx];
               std::vector<double> coord = m_topojson.transform_point(pos_quant);
-              std::cout << coord[0] << " " << coord[1] << "\t";
               lat.push_back(coord[1]);
               lon.push_back(coord[0]);
-
             }//size_vec_arcs
           }//size_arcs
 
@@ -463,7 +469,9 @@ void wxChart::OnDraw(wxDC& dc)
           {
             points.push_back(PointData(lon.at(idx_crd), lat.at(idx_crd)));
           }
-          m_graf.draw_polygon(dc, points, wxColour(0, 255, 0));
+          wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
+          idx_pal += range;
+          m_graf.draw_polygon(dc, points, color);
           for (size_t idx_crd = 0; idx_crd < lat.size(); idx_crd++)
           {
             double lat_ = lat.at(idx_crd);
@@ -482,6 +490,8 @@ void wxChart::OnDraw(wxDC& dc)
   else
   {
     size_t size_features = m_geojson.m_feature.size();
+    size_t range = rgb_256.size() / size_features;
+    size_t idx_pal = 0;
     for (size_t idx_fet = 0; idx_fet < size_features; idx_fet++)
     {
       feature_t feature = m_geojson.m_feature.at(idx_fet);
@@ -522,7 +532,9 @@ void wxChart::OnDraw(wxDC& dc)
             {
               points.push_back(PointData(lon.at(idx_crd), lat.at(idx_crd)));
             }
-            m_graf.draw_polygon(dc, points, wxColour(0, 255, 0));
+            wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
+            idx_pal += range;
+            m_graf.draw_polygon(dc, points, color);
             for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
             {
               double lat_ = lat.at(idx_crd);
