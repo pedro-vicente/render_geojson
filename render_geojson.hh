@@ -37,11 +37,15 @@ public:
   void OnMouseDown(wxMouseEvent &event);
   void OnMouseMove(wxMouseEvent &event);
   int read_geojson(const char* file_name);
+  int read_topojson(const char* file_name);
   graf_t m_graf;
   geojson_t m_geojson;
   topojson_t m_topojson;
+  int m_is_topo;
 
 private:
+  double x_low, y_low, x_high, y_high; //data
+  int x_min, x_max, y_min, y_max; //screen
   wxDECLARE_EVENT_TABLE();
 };
 
