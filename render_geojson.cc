@@ -1,5 +1,8 @@
 #include "render_geojson.hh"
 #include "pal_rgb.h"
+#include "icons/sample.xpm"
+#include "icons/forward.xpm"
+#include "icons/folder.xpm"
 
 const int panel_size = 510;
 
@@ -30,6 +33,7 @@ EVT_MENU_RANGE(wxID_FILE1, wxID_FILE9, wxFrameMain::OnMRUFile)
 EVT_MENU(wxID_OPEN, wxFrameMain::OnFileOpen)
 EVT_MENU(wxID_EXIT, wxFrameMain::OnQuit)
 EVT_MENU(wxID_ABOUT, wxFrameMain::OnAbout)
+EVT_TOOL(ID_NEXT_GEOMETRY, wxFrameMain::OnNextGeometry)
 wxEND_EVENT_TABLE()
 
 wxFrameMain::wxFrameMain()
@@ -46,6 +50,13 @@ wxFrameMain::wxFrameMain()
   menu_bar->Append(menu_help, "&Help");
   SetMenuBar(menu_bar);
   CreateStatusBar(2);
+
+
+  CreateToolBar(wxNO_BORDER | wxTB_FLAT | wxTB_HORIZONTAL);
+  wxToolBar* tb = GetToolBar();
+  tb->AddTool(wxID_OPEN, wxT("Open file"), wxBitmap(xpm_folder), wxT("Open file"));
+  tb->AddTool(ID_NEXT_GEOMETRY, wxT("Next geometry"), wxBitmap(forward_xpm), wxT("Next geometry"));
+  tb->Realize();
 
   m_splitter = new wxSplitterWindow(this);
   m_splitter->SetSashInvisible(true);
@@ -133,7 +144,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
     wxEmptyString,
     wxString::Format
     (
-      wxT("geojson (*.geojson)|*.geojson|All files (%s)|%s"),
+      wxT("geojson/topojson files (*.geojson;*.topojson;*.json)|*.geojson;*.topojson;*.json|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
     ),
@@ -181,6 +192,15 @@ int wxFrameMain::read(const std::string &file_name)
   m_current_file = file_name;
   SetTitle(file_name);
   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxFrameMain::OnNextGeometry
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxFrameMain::OnNextGeometry(wxCommandEvent&)
+{
+  
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -20,10 +20,14 @@
 #include "wx/calctrl.h"
 #include "wx/timectrl.h"
 #include "wx/collpane.h"
-#include "sample.xpm"
 #include "grafix.hh"
 #include "geojson.hh"
 #include "topojson.hh"
+
+enum
+{
+  ID_NEXT_GEOMETRY = wxID_HIGHEST + 1
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 //rgb_t
@@ -81,6 +85,7 @@ public:
   void OnMRUFile(wxCommandEvent& event);
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
+  void OnNextGeometry(wxCommandEvent& event);
   wxString m_current_file;
 
 protected:
