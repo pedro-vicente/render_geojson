@@ -34,10 +34,13 @@ EVT_MENU(wxID_OPEN, wxFrameMain::OnFileOpen)
 EVT_MENU(wxID_EXIT, wxFrameMain::OnQuit)
 EVT_MENU(wxID_ABOUT, wxFrameMain::OnAbout)
 EVT_TOOL(ID_NEXT_GEOMETRY, wxFrameMain::OnNextGeometry)
+EVT_TOOL(ID_NEXT_POINT, wxFrameMain::OnNextPoint)
 wxEND_EVENT_TABLE()
 
 wxFrameMain::wxFrameMain()
-  : wxFrame(NULL, wxID_ANY, "geojson reader")
+  : wxFrame(NULL, wxID_ANY, "geojson reader"),
+  m_win_grid(NULL),
+  m_win_chart(NULL)
 {
   SetIcon(wxICON(sample));
   wxMenu *menu_file = new wxMenu;
@@ -51,12 +54,20 @@ wxFrameMain::wxFrameMain()
   SetMenuBar(menu_bar);
   CreateStatusBar(2);
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //toolbar
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   CreateToolBar(wxNO_BORDER | wxTB_FLAT | wxTB_HORIZONTAL);
   wxToolBar* tb = GetToolBar();
   tb->AddTool(wxID_OPEN, wxT("Open file"), wxBitmap(xpm_folder), wxT("Open file"));
   tb->AddTool(ID_NEXT_GEOMETRY, wxT("Next geometry"), wxBitmap(forward_xpm), wxT("Next geometry"));
+  tb->AddTool(ID_NEXT_POINT, wxT("Next point"), wxBitmap(forward_xpm), wxT("Next point"));
   tb->Realize();
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //splitter
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   m_splitter = new wxSplitterWindow(this);
   m_splitter->SetSashInvisible(true);
@@ -64,10 +75,6 @@ wxFrameMain::wxFrameMain()
   grid->SetMinSize(wxSize(panel_size, -1));
   wxWindow *chart = new wxWindow(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER);
   m_splitter->SplitVertically(grid, chart, panel_size);
-
-  //avoid update on empty windows 
-  m_win_grid = NULL;
-  m_win_chart = NULL;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   //file history
@@ -147,7 +154,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
       wxT("geojson/topojson files (*.geojson;*.topojson;*.json)|*.geojson;*.topojson;*.json|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
-    ),
+      ),
     wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_CHANGE_DIR);
   if (dlg.ShowModal() != wxID_OK)
   {
@@ -185,7 +192,7 @@ int wxFrameMain::read(const std::string &file_name)
       return -1;
     }
   }
-  m_win_chart = m_splitter->GetWindow2();
+  m_win_chart = (wxChart *)m_splitter->GetWindow2();
   m_splitter->ReplaceWindow(m_win_chart, chart);
   m_win_chart->Destroy();
   m_win_chart = chart;
@@ -200,7 +207,22 @@ int wxFrameMain::read(const std::string &file_name)
 
 void wxFrameMain::OnNextGeometry(wxCommandEvent&)
 {
-  
+  if (m_win_chart)
+  {
+    m_win_chart->next_geometry();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxFrameMain::OnNextPoint
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxFrameMain::OnNextPoint(wxCommandEvent&)
+{
+  if (m_win_chart)
+  {
+    m_win_chart->next_point();
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +235,9 @@ EVT_MOTION(wxChart::OnMouseMove)
 wxEND_EVENT_TABLE()
 
 wxChart::wxChart(wxWindow *parent) :
-  wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER)
+  wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER),
+  m_curr_geom(0),
+  m_curr_point(0)
 {
   x_min = 80;
   y_min = 30;
@@ -589,4 +613,24 @@ void wxChart::OnMouseMove(wxMouseEvent &event)
   event.GetPosition(&x, &y);
   CalcUnscrolledPosition(x, y, &xx, &yy);
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxChart::next_geometry
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxChart::next_geometry()
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxChart::next_point
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxChart::next_point()
+{
+
+}
+
 

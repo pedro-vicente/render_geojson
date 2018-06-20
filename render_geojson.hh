@@ -26,7 +26,8 @@
 
 enum
 {
-  ID_NEXT_GEOMETRY = wxID_HIGHEST + 1
+  ID_NEXT_GEOMETRY = wxID_HIGHEST + 1,
+  ID_NEXT_POINT
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,17 +59,21 @@ public:
   virtual void OnDraw(wxDC& dc);
   void OnMouseDown(wxMouseEvent &event);
   void OnMouseMove(wxMouseEvent &event);
+  void next_geometry();
+  void next_point();
+  int m_is_topo;
   int read_geojson(const char* file_name);
   int read_topojson(const char* file_name);
-  graf_t m_graf;
-  geojson_t m_geojson;
-  topojson_t m_topojson;
-  int m_is_topo;
 
 private:
   double x_low, y_low, x_high, y_high; //data
   int x_min, x_max, y_min, y_max; //screen
   std::vector<rgb_t> rgb_256;
+  graf_t m_graf;
+  geojson_t m_geojson;
+  topojson_t m_topojson;
+  size_t m_curr_geom;
+  size_t m_curr_point;
   wxDECLARE_EVENT_TABLE();
 };
 
@@ -86,11 +91,12 @@ public:
   void OnQuit(wxCommandEvent& event);
   void OnAbout(wxCommandEvent& event);
   void OnNextGeometry(wxCommandEvent& event);
+  void OnNextPoint(wxCommandEvent& event);
   wxString m_current_file;
 
 protected:
   wxWindow *m_win_grid;
-  wxWindow *m_win_chart;
+  wxChart *m_win_chart;
   wxSplitterWindow* m_splitter;
   int read(const std::string &file_name);
   wxFileHistory m_file_history;
