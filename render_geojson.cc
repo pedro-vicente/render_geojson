@@ -515,12 +515,30 @@ void wxChart::OnDraw(wxDC& dc)
           }
           wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
           idx_pal += range;
-          m_graf.draw_polygon(dc, points, color);
-          for (size_t idx_crd = 0; idx_crd < lat.size(); idx_crd++)
+          //debug mode
+          if (idx_geom == m_curr_geom)
           {
-            double lat_ = lat.at(idx_crd);
-            double lon_ = lon.at(idx_crd);
-            m_graf.draw_circle(dc, lon_, lat_, wxColour(255, 0, 0), 2);
+            color = wxColour(128, 0, 0);
+          }
+          else
+          {
+            color = wxColour(0, 128, 0);
+          }
+          m_graf.draw_polygon(dc, points, color);
+          for (size_t idx_crd = 0; idx_crd < points.size(); idx_crd++)
+          {
+            double px = points.at(idx_crd).x;
+            double py = points.at(idx_crd).y;
+            if (idx_crd == m_curr_point && idx_geom == m_curr_geom)
+            {
+              color = wxColour(255, 0, 0);
+              m_graf.draw_circle(dc, px, py, color, 5);
+            }
+            else
+            {
+              color = wxColour(0, 255, 0);
+              m_graf.draw_circle(dc, px, py, color, 2);
+            }
           }
         }//size_pol
       }//"Polygon"
@@ -621,7 +639,14 @@ void wxChart::OnMouseMove(wxMouseEvent &event)
 
 void wxChart::next_geometry()
 {
-
+  m_curr_point = 0;
+  size_t size_geom = m_topojson.m_geom.size();
+  m_curr_geom++;
+  if (m_curr_geom > size_geom)
+  {
+    m_curr_geom = 0;
+  }
+  Refresh();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +655,31 @@ void wxChart::next_geometry()
 
 void wxChart::next_point()
 {
-
+  Geometry_t geometry = m_topojson.m_geom.at(m_curr_geom);
+  if (geometry.type.compare("Polygon") == 0)
+  {
+    size_t size_pol = geometry.m_polygon.size();
+    Polygon_topojson_t polygon = geometry.m_polygon.at(0);
+    size_t size_arcs = polygon.arcs.size();
+    std::vector<int> points;
+    for (size_t idx_arc = 0; idx_arc < size_arcs; idx_arc++)
+    {
+      int index = polygon.arcs.at(idx_arc);
+      int index_q = index < 0 ? ~index : index;
+      arc_t arc = m_topojson.m_arcs.at(index_q);
+      size_t size_vec_arcs = arc.vec.size();
+      for (size_t idx = 0; idx < size_vec_arcs; idx++)
+      {
+        points.push_back(0);
+      }
+    }
+    m_curr_point++;
+    if (m_curr_point > points.size())
+    {
+      m_curr_point = 0;
+    }
+    Refresh();
+  }
 }
 
 
