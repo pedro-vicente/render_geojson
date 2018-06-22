@@ -7,6 +7,30 @@
 const int panel_size = 510;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+//GetPathComponent
+//return last component of POSIX path name
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+wxString GetPathComponent(const wxString &path)
+{
+  wxString name;
+  bool isurl = (path.SubString(0, 3) == "http");
+  if (isurl)
+  {
+    return path;
+  }
+  else
+  {
+#ifdef __WINDOWS__
+    name = path.AfterLast('\\');
+#else
+    name = path.AfterLast('/');
+#endif
+  }
+  return name;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 //wxAppAlert::OnInit()
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +63,6 @@ wxEND_EVENT_TABLE()
 
 wxFrameMain::wxFrameMain()
   : wxFrame(NULL, wxID_ANY, "geojson reader"),
-  m_win_grid(NULL),
   m_win_chart(NULL)
 {
   SetIcon(wxICON(sample));
@@ -71,10 +94,11 @@ wxFrameMain::wxFrameMain()
 
   m_splitter = new wxSplitterWindow(this);
   m_splitter->SetSashInvisible(true);
-  wxPanel *grid = new wxPanel(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER);
-  grid->SetMinSize(wxSize(panel_size, -1));
+  m_win_grid = new wxPanel(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER);
+  m_win_grid->SetBackgroundColour(*wxWHITE);
+  m_win_grid->SetMinSize(wxSize(panel_size, -1));
   wxWindow *chart = new wxWindow(m_splitter, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDOUBLE_BORDER);
-  m_splitter->SplitVertically(grid, chart, panel_size);
+  m_splitter->SplitVertically(m_win_grid, chart, panel_size);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   //file history
@@ -174,11 +198,32 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
 
 int wxFrameMain::read(const std::string &file_name)
 {
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //add tree
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  wxSize size = m_win_grid->GetSize();
+  m_tree = new wxTreeCtrlExplorer(m_win_grid, wxID_ANY, wxPoint(0, 0), size, wxTR_DEFAULT_STYLE | wxNO_BORDER | wxTR_HIDE_ROOT);
+  wxImageList* imglist = new wxImageList(16, 16, true, 2);
+  wxBitmap bitmaps[3];
+  bitmaps[id_folder] = wxBitmap(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16, 16)));
+  bitmaps[id_variable] = wxBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16)));
+  imglist->Add(bitmaps[id_folder]);
+  imglist->Add(bitmaps[id_variable]);
+  m_tree->AssignImageList(imglist);
+  m_tree_root = m_tree->AddRoot("");
+
+  wxTreeItemId root = m_tree->AppendItem(m_tree_root, GetPathComponent(file_name), 0, 0, NULL);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //read
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
   wxChart *chart = new wxChart(m_splitter);
   chart->m_is_topo = is_topojson(file_name.c_str());
   if (chart->m_is_topo == 1)
   {
-    if (chart->read_topojson(file_name.c_str()) < 0)
+    if (chart->read_topojson(file_name.c_str(), m_tree, root) < 0)
     {
       chart->Destroy();
       return -1;
@@ -192,6 +237,11 @@ int wxFrameMain::read(const std::string &file_name)
       return -1;
     }
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //set windows
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
   m_win_chart = (wxChart *)m_splitter->GetWindow2();
   m_splitter->ReplaceWindow(m_win_chart, chart);
   m_win_chart->Destroy();
@@ -329,7 +379,7 @@ int wxChart::read_geojson(const char* file_name)
 //wxChart::read_topojson
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int wxChart::read_topojson(const char* file_name)
+int wxChart::read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId item_id)
 {
   if (m_topojson.convert(file_name) < 0)
   {
@@ -345,85 +395,43 @@ int wxChart::read_topojson(const char* file_name)
   for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
   {
     Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
+    wxTreeItemId item_geom = tree->AppendItem(item_id, geometry.type, 1, 1, NULL);
     if (geometry.type.compare("Polygon") == 0)
     {
       size_t size_pol = geometry.m_polygon.size();
       for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
       {
         Polygon_topojson_t polygon = geometry.m_polygon.at(idx_pol);
+        wxString name_pol = wxString::Format(wxT("%i"), (int)idx_pol + 1);
+        wxTreeItemId item_pol = tree->AppendItem(item_geom, name_pol, 1, 1, NULL);
         size_t size_arcs = polygon.arcs.size();
-
-        ///////////////////////////////////////////////////////////////////////////////////////
-        //render each polygon as a vector of vertices passed to Polygon
-        ///////////////////////////////////////////////////////////////////////////////////////
-
-        std::vector<double> lat;
-        std::vector<double> lon;
-
         for (size_t idx_arc = 0; idx_arc < size_arcs; idx_arc++)
         {
-          int index = polygon.arcs.at(idx_arc);
-          int index_q = index < 0 ? ~index : index;
-          arc_t arc = m_topojson.m_arcs.at(index_q);
-          size_t size_vec_arcs = arc.vec.size();
-          //if a topology is quantized, the positions of each arc in the topology which are quantized 
-          //must be delta-encoded. The first position of the arc is a normal position [x1, y1]. 
-          //The second position [x2, y2] is encoded as [dx2, dy2], where 
-          //x2 = x1 + dx2 and 
-          //y2 = y1 + dx2.
-          //The third position [x3, y3] is encoded as [dx3, dy3], where 
-          //x3 = x2 + dx3 = x1 + dx2 + dx3 and
-          //y3 = y2 + dy3 = y1 + dy2 + dy3 and so on.
-          int x0 = arc.vec.at(0).at(0);
-          int y0 = arc.vec.at(0).at(1);
-          std::vector<int> x;
-          std::vector<int> y;
-          x.push_back(x0);
-          y.push_back(y0);
-          for (size_t idx = 1; idx < size_vec_arcs; idx++)
-          {
-            int xn = x[idx - 1] + arc.vec.at(idx).at(0);
-            int yn = y[idx - 1] + arc.vec.at(idx).at(1);
-            x.push_back(xn);
-            y.push_back(yn);
-          }
-
-          for (size_t idx = 0; idx < size_vec_arcs; idx++)
-          {
-            int pos_quant[2];
-            pos_quant[0] = x[idx];
-            pos_quant[1] = y[idx];
-            std::vector<double> coord = m_topojson.transform_point(pos_quant);
-            std::cout << coord[0] << " " << coord[1] << "\t";
-            lat.push_back(coord[1]);
-            lon.push_back(coord[0]);
-
-          }//size_vec_arcs
-        }//size_arcs
-
-         //get maximum and minimum values
-
-        for (size_t idx = 0; idx < lat.size(); idx++)
+          int index_arc = polygon.arcs.at(idx_arc);
+          wxString name_arc = wxString::Format(wxT("%i"), (int)index_arc);
+          tree->AppendItem(item_pol, name_arc, 1, 1, NULL);
+        }
+        size_t size_points = geometry.m_polygon.at(idx_pol).m_y.size();
+        for (size_t idx = 0; idx < size_points; idx++)
         {
-          double lat_ = lat.at(idx);
-          double lon_ = lon.at(idx);
-          if (lat_ > y_high)
+          double lat = geometry.m_polygon.at(idx_pol).m_y.at(idx);
+          double lon = geometry.m_polygon.at(idx_pol).m_x.at(idx);
+          if (lat > y_high)
           {
-            y_high = lat.at(idx);
+            y_high = lat;
           }
-          if (lon_ > x_high)
+          if (lon > x_high)
           {
-            x_high = lon.at(idx);
+            x_high = lon;
           }
-          if (lat_ < y_low)
+          if (lat < y_low)
           {
-            y_low = lat.at(idx);
+            y_low = lat;
           }
-          if (lon_ < x_low)
+          if (lon < x_low)
           {
-            x_low = lon.at(idx);
+            x_low = lon;
           }
-
         }//size_pol
       }//"Polygon"
     }//size_geom
@@ -459,59 +467,18 @@ void wxChart::OnDraw(wxDC& dc)
         for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
         {
           Polygon_topojson_t polygon = geometry.m_polygon.at(idx_pol);
-          size_t size_arcs = polygon.arcs.size();
 
           ///////////////////////////////////////////////////////////////////////////////////////
           //render each polygon as a vector of vertices passed to Polygon
           ///////////////////////////////////////////////////////////////////////////////////////
 
-          std::vector<double> lat;
-          std::vector<double> lon;
-
-          for (size_t idx_arc = 0; idx_arc < size_arcs; idx_arc++)
-          {
-            int index = polygon.arcs.at(idx_arc);
-            int index_q = index < 0 ? ~index : index;
-            arc_t arc = m_topojson.m_arcs.at(index_q);
-            size_t size_vec_arcs = arc.vec.size();
-            //if a topology is quantized, the positions of each arc in the topology which are quantized 
-            //must be delta-encoded. The first position of the arc is a normal position [x1, y1]. 
-            //The second position [x2, y2] is encoded as [dx2, dy2], where 
-            //x2 = x1 + dx2 and 
-            //y2 = y1 + dx2.
-            //The third position [x3, y3] is encoded as [dx3, dy3], where 
-            //x3 = x2 + dx3 = x1 + dx2 + dx3 and
-            //y3 = y2 + dy3 = y1 + dy2 + dy3 and so on.
-            int x0 = arc.vec.at(0).at(0);
-            int y0 = arc.vec.at(0).at(1);
-            std::vector<int> x;
-            std::vector<int> y;
-            x.push_back(x0);
-            y.push_back(y0);
-            for (size_t idx = 1; idx < size_vec_arcs; idx++)
-            {
-              int xn = x[idx - 1] + arc.vec.at(idx).at(0);
-              int yn = y[idx - 1] + arc.vec.at(idx).at(1);
-              x.push_back(xn);
-              y.push_back(yn);
-            }
-            for (size_t idx = 0; idx < size_vec_arcs; idx++)
-            {
-              int pos_quant[2];
-              pos_quant[0] = x[idx];
-              pos_quant[1] = y[idx];
-              std::vector<double> coord = m_topojson.transform_point(pos_quant);
-              lat.push_back(coord[1]);
-              lon.push_back(coord[0]);
-            }//size_vec_arcs
-          }//size_arcs
-
-           //render lat, lon
-
           std::vector<PointData> points;
-          for (size_t idx_crd = 0; idx_crd < lat.size(); idx_crd++)
+          size_t size_points = geometry.m_polygon.at(idx_pol).m_y.size();
+          for (size_t idx_crd = 0; idx_crd < size_points; idx_crd++)
           {
-            points.push_back(PointData(lon.at(idx_crd), lat.at(idx_crd)));
+            double lat = geometry.m_polygon.at(idx_pol).m_y.at(idx_crd);
+            double lon = geometry.m_polygon.at(idx_pol).m_x.at(idx_crd);
+            points.push_back(PointData(lon, lat));
           }
           wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
           idx_pal += range;
@@ -647,6 +614,9 @@ void wxChart::next_geometry()
     m_curr_geom = 0;
   }
   Refresh();
+  wxString str = wxString::Format(_T("Geometry %ld of %ld."), (long)m_curr_geom, (long)size_geom);
+  wxFrameMain *main = (wxFrameMain*)wxGetApp().GetTopWindow();
+  main->SetStatusText(str);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -655,31 +625,45 @@ void wxChart::next_geometry()
 
 void wxChart::next_point()
 {
+  size_t size_geom = m_topojson.m_geom.size();
   Geometry_t geometry = m_topojson.m_geom.at(m_curr_geom);
   if (geometry.type.compare("Polygon") == 0)
   {
-    size_t size_pol = geometry.m_polygon.size();
     Polygon_topojson_t polygon = geometry.m_polygon.at(0);
-    size_t size_arcs = polygon.arcs.size();
-    std::vector<int> points;
-    for (size_t idx_arc = 0; idx_arc < size_arcs; idx_arc++)
-    {
-      int index = polygon.arcs.at(idx_arc);
-      int index_q = index < 0 ? ~index : index;
-      arc_t arc = m_topojson.m_arcs.at(index_q);
-      size_t size_vec_arcs = arc.vec.size();
-      for (size_t idx = 0; idx < size_vec_arcs; idx++)
-      {
-        points.push_back(0);
-      }
-    }
+    size_t size_points = polygon.m_x.size();
     m_curr_point++;
-    if (m_curr_point > points.size())
+    if (m_curr_point > size_points)
     {
       m_curr_point = 0;
     }
     Refresh();
+    wxString str = wxString::Format(_T("Geometry %ld of %ld. Point %ld of %ld, coordinate (%.2f, %.2f)"),
+      (long)m_curr_geom, (long)size_geom, (long)m_curr_point, (long)size_points,
+      polygon.m_x.at(m_curr_point), polygon.m_y.at(m_curr_point));
+    wxFrameMain *main = (wxFrameMain*)wxGetApp().GetTopWindow();
+    main->SetStatusText(str);
   }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxTreeCtrlExplorer::wxTreeCtrlExplorer
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
+wxBEGIN_EVENT_TABLE(wxTreeCtrlExplorer, wxTreeCtrl)
+EVT_TREE_SEL_CHANGED(wxID_ANY, wxTreeCtrlExplorer::OnSelChanged)
+wxEND_EVENT_TABLE()
+
+wxTreeCtrlExplorer::wxTreeCtrlExplorer(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
+  : wxTreeCtrl(parent, id, pos, size, style)
+{
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxTreeCtrlExplorer::OnSelChanged
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxTreeCtrlExplorer::OnSelChanged(wxTreeEvent& event)
+{
+  event.Skip();
+}

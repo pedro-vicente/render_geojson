@@ -20,6 +20,7 @@
 #include "wx/calctrl.h"
 #include "wx/timectrl.h"
 #include "wx/collpane.h"
+#include "wx/treectrl.h"
 #include "grafix.hh"
 #include "geojson.hh"
 #include "topojson.hh"
@@ -63,7 +64,7 @@ public:
   void next_point();
   int m_is_topo;
   int read_geojson(const char* file_name);
-  int read_topojson(const char* file_name);
+  int read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId item_id);
 
 private:
   double x_low, y_low, x_high, y_high; //data
@@ -74,6 +75,19 @@ private:
   topojson_t m_topojson;
   size_t m_curr_geom;
   size_t m_curr_point;
+  wxDECLARE_EVENT_TABLE();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxTreeCtrlExplorer
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class wxTreeCtrlExplorer : public wxTreeCtrl
+{
+public:
+  wxTreeCtrlExplorer(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style);
+  void OnSelChanged(wxTreeEvent& event);
+private:
   wxDECLARE_EVENT_TABLE();
 };
 
@@ -96,10 +110,19 @@ public:
 
 protected:
   wxWindow *m_win_grid;
+  wxTreeCtrlExplorer *m_tree;
+  wxTreeItemId m_tree_root;
   wxChart *m_win_chart;
   wxSplitterWindow* m_splitter;
   int read(const std::string &file_name);
   wxFileHistory m_file_history;
+
+  //tree icons
+  enum
+  {
+    id_folder,
+    id_variable
+  };
 
 private:
   wxDECLARE_EVENT_TABLE();
