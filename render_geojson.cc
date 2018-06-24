@@ -606,7 +606,7 @@ void wxChart::next_geometry()
   m_curr_point = 0;
   size_t size_geom = m_topojson.m_geom.size();
   m_curr_geom++;
-  if (m_curr_geom > size_geom)
+  if (m_curr_geom > size_geom - 1)
   {
     m_curr_geom = 0;
   }
@@ -630,7 +630,7 @@ void wxChart::next_point()
     Polygon_topojson_t polygon = geometry.m_polygon.at(0);
     size_t size_points = polygon.m_x.size();
     m_curr_point++;
-    if (m_curr_point > size_points)
+    if (m_curr_point > size_points - 1)
     {
       m_curr_point = 0;
     }
