@@ -485,26 +485,23 @@ void wxChart::OnDraw(wxDC& dc)
           //debug mode
           if (idx_geom == m_curr_geom)
           {
-            color = wxColour(128, 0, 0);
+            m_graf.draw_polygon(dc, points, wxColour(128, 0, 0), wxColour(255, 0, 0));
           }
           else
           {
-            color = wxColour(0, 128, 0);
+            m_graf.draw_polygon(dc, points, wxColour(0, 128, 0), wxColour(0, 0, 0));
           }
-          m_graf.draw_polygon(dc, points, color);
           for (size_t idx_crd = 0; idx_crd < points.size(); idx_crd++)
           {
             double px = points.at(idx_crd).x;
             double py = points.at(idx_crd).y;
             if (idx_crd == m_curr_point && idx_geom == m_curr_geom)
             {
-              color = wxColour(255, 0, 0);
-              m_graf.draw_circle(dc, px, py, color, 5);
+              m_graf.draw_circle(dc, px, py, wxColour(255, 0, 0), 5);
             }
             else
             {
-              color = wxColour(0, 255, 0);
-              m_graf.draw_circle(dc, px, py, color, 2);
+              m_graf.draw_circle(dc, px, py, wxColour(0, 255, 0), 2);
             }
           }
         }//size_pol
@@ -563,7 +560,7 @@ void wxChart::OnDraw(wxDC& dc)
             }
             wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
             idx_pal += range;
-            m_graf.draw_polygon(dc, points, color);
+            m_graf.draw_polygon(dc, points, color, wxColour(0, 0, 0));
             for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
             {
               double lat_ = lat.at(idx_crd);

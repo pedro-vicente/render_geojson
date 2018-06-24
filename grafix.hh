@@ -33,7 +33,7 @@ public:
   void draw_line(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data);
   void draw_rectangle(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data, wxColour color);
   void draw_polygon(wxDC &dc, size_t nbr_points, PointData *points_data, wxColour color, bool border, bool is_bitmap);
-  void draw_polygon(wxDC &dc, std::vector<PointData> &points, wxColour color);
+  void draw_polygon(wxDC &dc, std::vector<PointData> &points, wxColour color_brush, wxColour color_pen);
   void draw_spline(wxDC &dc, size_t nbr_points, PointData *points_data, wxColour color);
   void draw_scale(wxDC &dc);
 

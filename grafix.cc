@@ -154,9 +154,10 @@ void graf_t::draw_polygon(wxDC &dc, size_t nbr_points, PointData *points_data, w
 //graf_t::draw_polygon
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void graf_t::draw_polygon(wxDC &dc, std::vector<PointData> &points_data, wxColour color)
+void graf_t::draw_polygon(wxDC &dc, std::vector<PointData> &points_data, wxColour color_brush, wxColour color_pen)
 {
-  dc.SetBrush(wxBrush(color));
+  dc.SetBrush(wxBrush(color_brush));
+  dc.SetPen(wxPen(color_pen));
   wxPoint *points_screen = new wxPoint[points_data.size()];
   for (size_t idx = 0; idx < points_data.size(); idx++)
   {
