@@ -178,7 +178,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
       wxT("geojson/topojson files (*.geojson;*.topojson;*.json)|*.geojson;*.topojson;*.json|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
-      ),
+    ),
     wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_CHANGE_DIR);
   if (dlg.ShowModal() != wxID_OK)
   {
@@ -395,7 +395,7 @@ int wxChart::read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId
   for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
   {
     Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
-    wxTreeItemId item_geom = tree->AppendItem(item_id, geometry.type, 1, 1, NULL);
+    wxTreeItemId item_geom = tree->AppendItem(item_id, geometry.type, 1, 1, new ItemData(idx_geom));
     if (geometry.type.compare("Polygon") == 0)
     {
       size_t size_pol = geometry.m_polygon.size();
@@ -617,6 +617,7 @@ void wxChart::next_geometry()
   wxString str = wxString::Format(_T("Geometry %ld of %ld."), (long)m_curr_geom, (long)size_geom);
   wxFrameMain *main = (wxFrameMain*)wxGetApp().GetTopWindow();
   main->SetStatusText(str);
+  main->m_tree->select_item(m_curr_geom);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -666,4 +667,47 @@ wxTreeCtrlExplorer::wxTreeCtrlExplorer(wxWindow *parent, const wxWindowID id, co
 void wxTreeCtrlExplorer::OnSelChanged(wxTreeEvent& event)
 {
   event.Skip();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxTreeCtrlExplorer::select_item
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxTreeCtrlExplorer::select_item(size_t curr_geom)
+{
+  //find the tree item with data of geometry index
+  wxTreeItemId root = GetRootItem();
+  if (!root.IsOk())
+    return;
+  wxTreeItemId found = find_item(root, curr_geom);
+  if (found.IsOk())
+  {
+    SelectItem(found);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxTreeCtrlExplorer::find_item
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+wxTreeItemId wxTreeCtrlExplorer::find_item(wxTreeItemId parent, size_t curr_geom)
+{
+  wxTreeItemIdValue cookie;
+  wxTreeItemId child = GetFirstChild(parent, cookie);
+  while (child.IsOk())
+  {
+    ItemData* data = (ItemData*)GetItemData(child);
+    if (data && data->m_curr_geom == curr_geom)
+    {
+      return child;
+    }
+    if (ItemHasChildren(child))
+    {
+      wxTreeItemId found = find_item(child, curr_geom);
+      if (found.IsOk())
+        return found;
+    }
+    child = GetNextChild(parent, cookie);
+  }
+  return wxTreeItemId();
 }

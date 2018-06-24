@@ -87,7 +87,10 @@ class wxTreeCtrlExplorer : public wxTreeCtrl
 public:
   wxTreeCtrlExplorer(wxWindow *parent, const wxWindowID id, const wxPoint& pos, const wxSize& size, long style);
   void OnSelChanged(wxTreeEvent& event);
+  void select_item(size_t);
+
 private:
+  wxTreeItemId find_item(wxTreeItemId parent, size_t curr_geom);
   wxDECLARE_EVENT_TABLE();
 };
 
@@ -107,10 +110,10 @@ public:
   void OnNextGeometry(wxCommandEvent& event);
   void OnNextPoint(wxCommandEvent& event);
   wxString m_current_file;
+  wxTreeCtrlExplorer *m_tree;
 
 protected:
   wxWindow *m_win_grid;
-  wxTreeCtrlExplorer *m_tree;
   wxTreeItemId m_tree_root;
   wxChart *m_win_chart;
   wxSplitterWindow* m_splitter;
@@ -136,6 +139,20 @@ class wxAppAlert : public wxApp
 {
 public:
   virtual bool OnInit();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//ItemData
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class ItemData : public wxTreeItemData
+{
+public:
+  ItemData(size_t curr_geom) :
+    m_curr_geom(curr_geom)
+  {
+  }
+  size_t m_curr_geom;
 };
 
 #endif
