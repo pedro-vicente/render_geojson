@@ -1,7 +1,7 @@
 # render_geojson
 C++ geoJSON and topoJSON parser and rendering using the WxWidgets GUI library. 
 
-#geoJSON specification
+# geoJSON specification
 GeoJSON is a format for encoding a variety of geographic data structures.
 
 http://geojson.org/
@@ -10,13 +10,19 @@ JSON parsing is done with gason
 
 https://github.com/vivkin/gason
 
-#lib_geojson 
+# lib_geojson 
 
 GeoJSON parsing using lib_geojson
 
 https://github.com/pedro-vicente/lib_geojson
 
-#UNIX build
+# lib_topojson 
+
+TopoJSON parsing using lib_topojson
+
+https://github.com/pedro-vicente/lib_topojson
+
+# UNIX build
 
 Dependencies
 ------------
@@ -30,7 +36,6 @@ Install dependency packages (Ubuntu):
 sudo apt-get install build-essential
 sudo apt-get install autoconf
 sudo apt-get install libwxgtk3.0-dev
-sudo apt-get install libnetcdf-dev netcdf-bin netcdf-doc
 </pre>
 
 Get source:
