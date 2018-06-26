@@ -560,13 +560,11 @@ void wxChart::OnDraw(wxDC& dc)
             }
             wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
             idx_pal += range;
-            m_graf.draw_polygon(dc, points, color, wxColour(0, 0, 0));
-            for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
+            if (idx_pal >= rgb_256.size())
             {
-              double lat_ = lat.at(idx_crd);
-              double lon_ = lon.at(idx_crd);
-              m_graf.draw_circle(dc, lon_, lat_, wxColour(255, 0, 0), 2);
+              idx_pal = 0;
             }
+            m_graf.draw_polygon(dc, points, color, wxColour(0, 0, 0));
           }
         }  //idx_pol
       } //idx_geo

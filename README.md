@@ -49,3 +49,11 @@ autoreconf -vfi
 ./configure
 make
 </pre>
+
+# Example
+
+file in data/countries.geo.json
+
+![alt text](https://user-images.githubusercontent.com/6119070/41935976-a4eb5530-7959-11e8-9f51-5a7e0be79197.png)
+
+
