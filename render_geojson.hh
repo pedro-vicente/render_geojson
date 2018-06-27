@@ -65,6 +65,7 @@ public:
   int m_is_topo;
   int read_geojson(const char* file_name);
   int read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId item_id);
+  void draw_geometry(wxDC& dc, size_t idx_geom);
 
 private:
   double x_low, y_low, x_high, y_high; //data

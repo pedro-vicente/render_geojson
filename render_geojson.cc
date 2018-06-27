@@ -101,6 +101,19 @@ wxFrameMain::wxFrameMain()
   m_splitter->SplitVertically(m_win_grid, chart, panel_size);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //tree
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  m_tree = new wxTreeCtrlExplorer(m_win_grid, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_DEFAULT_STYLE | wxNO_BORDER | wxTR_HIDE_ROOT);
+  wxImageList* imglist = new wxImageList(16, 16, true, 2);
+  wxBitmap bitmaps[3];
+  bitmaps[id_folder] = wxBitmap(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16, 16)));
+  bitmaps[id_variable] = wxBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16)));
+  imglist->Add(bitmaps[id_folder]);
+  imglist->Add(bitmaps[id_variable]);
+  m_tree->AssignImageList(imglist);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
   //file history
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -178,7 +191,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
       wxT("geojson/topojson files (*.geojson;*.topojson;*.json)|*.geojson;*.topojson;*.json|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
-    ),
+      ),
     wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_CHANGE_DIR);
   if (dlg.ShowModal() != wxID_OK)
   {
@@ -198,21 +211,10 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
 
 int wxFrameMain::read(const std::string &file_name)
 {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
-  //add tree
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
-
   wxSize size = m_win_grid->GetSize();
-  m_tree = new wxTreeCtrlExplorer(m_win_grid, wxID_ANY, wxPoint(0, 0), size, wxTR_DEFAULT_STYLE | wxNO_BORDER | wxTR_HIDE_ROOT);
-  wxImageList* imglist = new wxImageList(16, 16, true, 2);
-  wxBitmap bitmaps[3];
-  bitmaps[id_folder] = wxBitmap(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16, 16)));
-  bitmaps[id_variable] = wxBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16)));
-  imglist->Add(bitmaps[id_folder]);
-  imglist->Add(bitmaps[id_variable]);
-  m_tree->AssignImageList(imglist);
+  m_tree->SetSize(size);
+  m_tree->DeleteAllItems();
   m_tree_root = m_tree->AddRoot("");
-
   wxTreeItemId root = m_tree->AppendItem(m_tree_root, GetPathComponent(file_name), 0, 0, NULL);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,57 +458,11 @@ void wxChart::OnDraw(wxDC& dc)
   if (m_is_topo == 1)
   {
     size_t size_geom = m_topojson.m_geom.size();
-    size_t range = rgb_256.size() / size_geom;
-    size_t idx_pal = 0;
     for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
     {
-      Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
-      if (geometry.type.compare("Polygon") == 0)
-      {
-        size_t size_pol = geometry.m_polygon.size();
-        for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
-        {
-          Polygon_topojson_t polygon = geometry.m_polygon.at(idx_pol);
-
-          ///////////////////////////////////////////////////////////////////////////////////////
-          //render each polygon as a vector of vertices passed to Polygon
-          ///////////////////////////////////////////////////////////////////////////////////////
-
-          std::vector<PointData> points;
-          size_t size_points = geometry.m_polygon.at(idx_pol).m_y.size();
-          for (size_t idx_crd = 0; idx_crd < size_points; idx_crd++)
-          {
-            double lat = geometry.m_polygon.at(idx_pol).m_y.at(idx_crd);
-            double lon = geometry.m_polygon.at(idx_pol).m_x.at(idx_crd);
-            points.push_back(PointData(lon, lat));
-          }
-          wxColour color = wxColour(rgb_256.at(idx_pal).red, rgb_256.at(idx_pal).green, rgb_256.at(idx_pal).blue);
-          idx_pal += range;
-          //debug mode
-          if (idx_geom == m_curr_geom)
-          {
-            m_graf.draw_polygon(dc, points, wxColour(128, 0, 0), wxColour(255, 0, 0));
-          }
-          else
-          {
-            m_graf.draw_polygon(dc, points, wxColour(0, 128, 0), wxColour(0, 0, 0));
-          }
-          for (size_t idx_crd = 0; idx_crd < points.size(); idx_crd++)
-          {
-            double px = points.at(idx_crd).x;
-            double py = points.at(idx_crd).y;
-            if (idx_crd == m_curr_point && idx_geom == m_curr_geom)
-            {
-              m_graf.draw_circle(dc, px, py, wxColour(255, 0, 0), 5);
-            }
-            else
-            {
-              m_graf.draw_circle(dc, px, py, wxColour(0, 255, 0), 2);
-            }
-          }
-        }//size_pol
-      }//"Polygon"
-    }//size_geom
+      draw_geometry(dc, idx_geom);
+    }
+    draw_geometry(dc, m_curr_geom);
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -570,6 +526,57 @@ void wxChart::OnDraw(wxDC& dc)
       } //idx_geo
     } //idx_fet
   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxChart::draw_geometry
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxChart::draw_geometry(wxDC& dc, size_t idx_geom)
+{
+  Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
+  if (geometry.type.compare("Polygon") == 0)
+  {
+    size_t size_pol = geometry.m_polygon.size();
+    for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
+    {
+      Polygon_topojson_t polygon = geometry.m_polygon.at(idx_pol);
+
+      ///////////////////////////////////////////////////////////////////////////////////////
+      //render each polygon as a vector of vertices passed to draw_polygon
+      ///////////////////////////////////////////////////////////////////////////////////////
+
+      std::vector<PointData> points;
+      size_t size_points = geometry.m_polygon.at(idx_pol).m_y.size();
+      for (size_t idx_crd = 0; idx_crd < size_points; idx_crd++)
+      {
+        double lat = geometry.m_polygon.at(idx_pol).m_y.at(idx_crd);
+        double lon = geometry.m_polygon.at(idx_pol).m_x.at(idx_crd);
+        points.push_back(PointData(lon, lat));
+      }
+      if (idx_geom == m_curr_geom)
+      {
+        m_graf.draw_polygon(dc, points, wxColour(128, 0, 0), wxColour(255, 0, 0));
+      }
+      else
+      {
+        m_graf.draw_polygon(dc, points, wxColour(0, 128, 0), wxColour(0, 0, 0));
+      }
+      for (size_t idx_crd = 0; idx_crd < points.size(); idx_crd++)
+      {
+        double px = points.at(idx_crd).x;
+        double py = points.at(idx_crd).y;
+        if (idx_crd == m_curr_point && idx_geom == m_curr_geom)
+        {
+          m_graf.draw_circle(dc, px, py, wxColour(255, 0, 0), 4);
+        }
+        else
+        {
+          m_graf.draw_circle(dc, px, py, wxColour(0, 255, 0), 2);
+        }
+      }
+    }//size_pol
+  }//"Polygon"
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
