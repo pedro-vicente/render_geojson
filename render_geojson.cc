@@ -7,6 +7,19 @@
 const int panel_size = 510;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+//is_polygon
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool is_polygon(const Geometry_t &g)
+{
+  if (g.type.compare("Polygon") == 0 || g.type.compare("MultiPolygon") == 0)
+  {
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 //GetPathComponent
 //return last component of POSIX path name
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -398,7 +411,7 @@ int wxChart::read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId
   {
     Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
     wxTreeItemId item_geom = tree->AppendItem(item_id, geometry.type, 1, 1, new ItemData(idx_geom));
-    if (geometry.type.compare("Polygon") == 0)
+    if (is_polygon(geometry))
     {
       size_t size_pol = geometry.m_polygon.size();
       for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
@@ -535,7 +548,7 @@ void wxChart::OnDraw(wxDC& dc)
 void wxChart::draw_geometry(wxDC& dc, size_t idx_geom)
 {
   Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
-  if (geometry.type.compare("Polygon") == 0)
+  if (is_polygon(geometry))
   {
     size_t size_pol = geometry.m_polygon.size();
     for (size_t idx_pol = 0; idx_pol < size_pol; idx_pol++)
@@ -630,7 +643,7 @@ void wxChart::next_point()
 {
   size_t size_geom = m_topojson.m_geom.size();
   Geometry_t geometry = m_topojson.m_geom.at(m_curr_geom);
-  if (geometry.type.compare("Polygon") == 0)
+  if (is_polygon(geometry))
   {
     Polygon_topojson_t polygon = geometry.m_polygon.at(0);
     size_t size_points = polygon.m_x.size();
