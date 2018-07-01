@@ -60,12 +60,18 @@ public:
   virtual void OnDraw(wxDC& dc);
   void OnMouseDown(wxMouseEvent &event);
   void OnMouseMove(wxMouseEvent &event);
+  int m_is_topojson;
+  int read_geojson(const char* file_name);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //topojson
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  int read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId item_id);
+  void draw_geometry(wxDC& dc, const topology_object_t& topology, size_t idx_geom);
+  void draw_topology(wxDC& dc, const topology_object_t& topology);
   void next_geometry();
   void next_point();
-  int m_is_topo;
-  int read_geojson(const char* file_name);
-  int read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId item_id);
-  void draw_geometry(wxDC& dc, size_t idx_geom);
 
 private:
   double x_low, y_low, x_high, y_high; //data

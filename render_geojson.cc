@@ -204,7 +204,7 @@ void wxFrameMain::OnFileOpen(wxCommandEvent &WXUNUSED(event))
       wxT("geojson/topojson files (*.geojson;*.topojson;*.json)|*.geojson;*.topojson;*.json|All files (%s)|%s"),
       wxFileSelectorDefaultWildcardStr,
       wxFileSelectorDefaultWildcardStr
-      ),
+    ),
     wxFD_OPEN | wxFD_FILE_MUST_EXIST | wxFD_CHANGE_DIR);
   if (dlg.ShowModal() != wxID_OK)
   {
@@ -235,8 +235,8 @@ int wxFrameMain::read(const std::string &file_name)
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   wxChart *chart = new wxChart(m_splitter);
-  chart->m_is_topo = is_topojson(file_name.c_str());
-  if (chart->m_is_topo == 1)
+  chart->m_is_topojson = is_topojson(file_name.c_str());
+  if (chart->m_is_topojson == 1)
   {
     if (chart->read_topojson(file_name.c_str(), m_tree, root) < 0)
     {
@@ -401,15 +401,29 @@ int wxChart::read_topojson(const char* file_name, wxTreeCtrl *tree, wxTreeItemId
     return -1;
   }
 
+  //no objects
+  if (!m_topojson.m_topology.size())
+  {
+    return 0;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  //must make the coordinates for the topology first; assume the first topology
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t topology_index = 0;
+  m_topojson.make_coordinates(topology_index);
+  topology_object_t topology = m_topojson.m_topology.at(topology_index);
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   //initialize_chart
   //get maximum and minimum values
   /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  size_t size_geom = m_topojson.m_geom.size();
+  size_t size_geom = topology.m_geom.size();
   for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
   {
-    Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
+    Geometry_t geometry = topology.m_geom.at(idx_geom);
     wxTreeItemId item_geom = tree->AppendItem(item_id, geometry.type, 1, 1, new ItemData(idx_geom));
     if (is_polygon(geometry))
     {
@@ -468,14 +482,14 @@ void wxChart::OnDraw(wxDC& dc)
   //render topojson
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  if (m_is_topo == 1)
+  if (m_is_topojson == 1)
   {
-    size_t size_geom = m_topojson.m_geom.size();
-    for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
+    if (!m_topojson.m_topology.size())
     {
-      draw_geometry(dc, idx_geom);
+      return;
     }
-    draw_geometry(dc, m_curr_geom);
+    topology_object_t topology = m_topojson.m_topology.at(0);
+    draw_topology(dc, topology);
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -542,12 +556,26 @@ void wxChart::OnDraw(wxDC& dc)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+//wxChart::draw_topology
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wxChart::draw_topology(wxDC& dc, const topology_object_t& topology)
+{
+  size_t size_geom = topology.m_geom.size();
+  for (size_t idx_geom = 0; idx_geom < size_geom; idx_geom++)
+  {
+    draw_geometry(dc, topology, idx_geom);
+  }
+  draw_geometry(dc, topology, m_curr_geom);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 //wxChart::draw_geometry
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void wxChart::draw_geometry(wxDC& dc, size_t idx_geom)
+void wxChart::draw_geometry(wxDC& dc, const topology_object_t& topology, size_t idx_geom)
 {
-  Geometry_t geometry = m_topojson.m_geom.at(idx_geom);
+  Geometry_t geometry = topology.m_geom.at(idx_geom);
   if (is_polygon(geometry))
   {
     size_t size_pol = geometry.m_polygon.size();
@@ -621,8 +649,13 @@ void wxChart::OnMouseMove(wxMouseEvent &event)
 
 void wxChart::next_geometry()
 {
+  if (!m_topojson.m_topology.size())
+  {
+    return;
+  }
+  topology_object_t topology = m_topojson.m_topology.at(0);
   m_curr_point = 0;
-  size_t size_geom = m_topojson.m_geom.size();
+  size_t size_geom = topology.m_geom.size();
   m_curr_geom++;
   if (m_curr_geom > size_geom - 1)
   {
@@ -641,8 +674,13 @@ void wxChart::next_geometry()
 
 void wxChart::next_point()
 {
-  size_t size_geom = m_topojson.m_geom.size();
-  Geometry_t geometry = m_topojson.m_geom.at(m_curr_geom);
+  if (!m_topojson.m_topology.size())
+  {
+    return;
+  }
+  topology_object_t topology = m_topojson.m_topology.at(0);
+  size_t size_geom = topology.m_geom.size();
+  Geometry_t geometry = topology.m_geom.at(m_curr_geom);
   if (is_polygon(geometry))
   {
     Polygon_topojson_t polygon = geometry.m_polygon.at(0);
