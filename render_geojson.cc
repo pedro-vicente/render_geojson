@@ -359,8 +359,8 @@ int wxChart::read_geojson(const char* file_name)
         std::vector<double> lon;
         for (size_t idx = 0; idx < size_crd; idx++)
         {
-          lat.push_back(polygon.m_coord[idx].m_lat);
-          lon.push_back(polygon.m_coord[idx].m_lon);
+          lat.push_back(polygon.m_coord[idx].y);
+          lon.push_back(polygon.m_coord[idx].x);
         }
         for (size_t idx = 0; idx < size_crd; idx++)
         {
@@ -521,8 +521,8 @@ void wxChart::OnDraw(wxDC& dc)
           std::vector<double> lon;
           for (size_t idx_crd = 0; idx_crd < size_crd; idx_crd++)
           {
-            lat.push_back(polygon.m_coord[idx_crd].m_lat);
-            lon.push_back(polygon.m_coord[idx_crd].m_lon);
+            lat.push_back(polygon.m_coord[idx_crd].y);
+            lon.push_back(polygon.m_coord[idx_crd].x);
           }
 
           ///////////////////////////////////////////////////////////////////////////////////////

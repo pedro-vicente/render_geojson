@@ -6,8 +6,8 @@
 #include "geojson.hh"
 
 const int SHIFT_WIDTH = 4;
-const bool DATA_NEWLINE = false;
-const bool OBJECT_NEWLINE = false;
+bool DATA_NEWLINE = false;
+bool OBJECT_NEWLINE = false;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,6 @@ int geojson_t::convert(const char* file_name)
     return -1;
   }
 
-  if (0) dump_value(value);
   parse_root(value);
   free(buf);
   return 0;
@@ -191,11 +190,12 @@ int geojson_t::parse_geometry(JsonValue value, feature_t &feature)
 
         geometry_t geometry;
         geometry.m_type = str_geometry_type;
-        coord_t coord;
+        
         polygon_t polygon;
         JsonValue arr_coord = node->value;
-        coord.m_lon = arr_coord.toNode()->value.toNumber();;
-        coord.m_lat = arr_coord.toNode()->next->value.toNumber();
+        double lon = arr_coord.toNode()->value.toNumber();;
+        double lat = arr_coord.toNode()->next->value.toNumber();
+        coord_t coord(lon, lat);
         polygon.m_coord.push_back(coord);
         geometry.m_polygons.push_back(polygon);
         feature.m_geometry.push_back(geometry);
@@ -247,9 +247,9 @@ int geojson_t::parse_coordinates(JsonValue value, const std::string &type, featu
       {
         JsonValue crd = n->value;
         assert(crd.getTag() == JSON_ARRAY);
-        coord_t coord;
-        coord.m_lon = crd.toNode()->value.toNumber();;
-        coord.m_lat = crd.toNode()->next->value.toNumber();
+        double lon = crd.toNode()->value.toNumber();;
+        double lat = crd.toNode()->next->value.toNumber();
+        coord_t coord(lon, lat);
         polygon.m_coord.push_back(coord);
       }
       geometry.m_polygons.push_back(polygon);
@@ -271,9 +271,9 @@ int geojson_t::parse_coordinates(JsonValue value, const std::string &type, featu
         {
           JsonValue crd = m->value;
           assert(crd.getTag() == JSON_ARRAY);
-          coord_t coord;
-          coord.m_lon = crd.toNode()->value.toNumber();;
-          coord.m_lat = crd.toNode()->next->value.toNumber();
+          double lon = crd.toNode()->value.toNumber();;
+          double lat = crd.toNode()->next->value.toNumber();
+          coord_t coord(lon, lat);
           polygon.m_coord.push_back(coord);
         }
         geometry.m_polygons.push_back(polygon);
