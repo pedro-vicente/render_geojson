@@ -108,9 +108,10 @@ void graf_t::draw_text(wxDC &dc, const wxString& str, double x1_data, double y1_
 //graf_t::draw_rectangle
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void graf_t::draw_rectangle(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data, wxColour color)
+void graf_t::draw_rectangle(wxDC &dc, double x1_data, double y1_data, double x2_data, double y2_data, wxColour color,
+  wxBrushStyle style)
 {
-  dc.SetBrush(wxBrush(color));
+  dc.SetBrush(wxBrush(color, style));
   data_to_screen(x1_data, y1_data);
   wxCoord x1 = P.x;
   wxCoord y1 = P.y;
